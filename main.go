@@ -8,7 +8,7 @@ import (
 
 func main() {
 	var colour, input, banner, substr string
-	banner = "standard"
+	banner = "thinkertoy"
 
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run . --color=<color> [substring] <string> [banner]")
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	// Split our input text to a string slice and separate with a newline.
-	words := strings.Split(input, "\n")
+	words := strings.Split(input, "\r\n")
 
 	// BANNER_____________________
 	// Check if the banner has an extension
@@ -89,23 +89,17 @@ func main() {
 	}
 	fileSize := fileInfo.Size()
 
-	if fileSize == 6623 || fileSize == 4702 || fileSize == 7462 || fileSize == 4496 {
+	if fileSize == 6623 || fileSize == 5556 || fileSize == 7463 {
 		// Split the content to a string slice and separate with newline.
-		contents := strings.Split(string(bannerText), "\n")
+		contents := strings.Split(string(bannerText), "\r\n")
 
 		asciiArt := ""
 		if substr == ""{
 			asciiArt = AsciiArts(words, contents)
 			colorizeTexts(asciiArt, colour)
 		} else {
-			//asciiArt = AsciiArt(words, contents, substr)
 			AsciiArt(words, contents, substr)
-			//coloredOutput := colorizeText(asciiArt, colour, substr)
-			//fmt.Print(coloredOutput)
 		}
-		//asciiArt := AsciiArt(words, contents, substr)
-		// coloredOutput := colorizeText(asciiArt, colour, substr)
-		// fmt.Print(coloredOutput)
 	} else {
 		fmt.Println("Error with the file size", fileSize)
 		return
@@ -114,7 +108,6 @@ func main() {
 
 // AsciiArt generates ASCII art based on input and banner contents
 func AsciiArt(input []string, contents []string, substr string) {
-    final := ""
     //countSpace := 0
 	for _, word := range input {
 		cont := strings.Contains(word, substr)
@@ -128,7 +121,7 @@ func AsciiArt(input []string, contents []string, substr string) {
 	
 			// Print the string with the substring in red
 			for i := 0; i < 8; i++ {
-				for m, char := range word {
+				for ind, char := range word {
 					if char == '\n' {
 						continue
 					}
@@ -138,13 +131,12 @@ func AsciiArt(input []string, contents []string, substr string) {
 						os.Exit(0)
 					}
 	
-					if m >= startIndex && m < endIndex {
+					if ind >= startIndex && ind < endIndex {
 						fmt.Print(red + contents[int(char-' ')*9+1+i] + reset)
 					} else {
 						fmt.Print(contents[int(char-' ')*9+1+i])
 					}
 				}
-				final += "\n"
 				fmt.Println()
 			}
 		} else {
@@ -164,8 +156,6 @@ func AsciiArt(input []string, contents []string, substr string) {
 			}
 		}
 	}
-	
-   // return final
 }
 
 // AsciiArt generates ASCII art based on input and banner contents
@@ -196,25 +186,6 @@ func AsciiArts(input []string, contents []string) string {
 		}
 	}
 	return final
-}
-
-// colorizeText applies color to the text based on the given color name and substring
-func colorizeText(text, colour, substr string) string {
-	colorMap := map[string]string{
-		"red":     "\033[31m",
-		"green":   "\033[32m",
-		"yellow":  "\033[33m",
-		"blue":    "\033[34m",
-		"magenta": "\033[35m",
-		"cyan":    "\033[36m",
-		"white":   "\033[37m",
-	}
-	reset := "\033[0m"
-
-	if color, exists := colorMap[colour]; exists {
-		return color + text + reset
-	}
-	return text
 }
 
 func colorizeTexts(text, colour string) {
