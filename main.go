@@ -8,7 +8,7 @@ import (
 
 func main() {
 	var colour, input, banner, substr string
-	banner = "thinkertoy"
+	banner = "standard"
 
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: go run . --color=<color> [substring] <string> [banner]")
@@ -19,9 +19,16 @@ func main() {
 	}
 
 	args := os.Args[1:]
-	for _, arg := range args {
-		if strings.HasPrefix(arg, "--color=") {
+	for k, arg := range args {
+		if strings.HasPrefix(arg, "--color=") && k == 0{
 			colour = strings.TrimPrefix(arg, "--color=")
+		} else if strings.HasPrefix(arg, "--color ") && k==0 {
+			colour = strings.TrimPrefix(arg, "--color ")
+		} else if (!strings.HasPrefix(arg, "--color=") || !strings.HasPrefix(arg, "--color ")) && k == 0 {
+			fmt.Println("Usage: go run . [OPTION] [STRING]")
+			fmt.Println()
+			fmt.Println("EX: go run . --color=<color> <substring to be colored> \"something\"")
+			os.Exit(0)
 		} else {
 			if input == "" {
 				input = arg
@@ -91,14 +98,20 @@ func main() {
 
 	if fileSize == 6623 || fileSize == 5556 || fileSize == 7463 {
 		// Split the content to a string slice and separate with newline.
-		contents := strings.Split(string(bannerText), "\r\n")
+		var contents []string
+		if banner == "thinkertoy.txt"{
+			contents = strings.Split(string(bannerText), "\r\n")
+		} else {
+			contents = strings.Split(string(bannerText), "\n")
+		}
+		
 
 		asciiArt := ""
 		if substr == ""{
 			asciiArt = AsciiArts(words, contents)
 			colorizeTexts(asciiArt, colour)
 		} else {
-			AsciiArt(words, contents, substr)
+			AsciiArt(words, contents, substr, colour)
 		}
 	} else {
 		fmt.Println("Error with the file size", fileSize)
@@ -107,53 +120,37 @@ func main() {
 }
 
 // AsciiArt generates ASCII art based on input and banner contents
-func AsciiArt(input []string, contents []string, substr string) {
-    //countSpace := 0
+func AsciiArt(input []string, contents []string, substr, colour string) {
+    color := getColor(colour)
 	for _, word := range input {
-		cont := strings.Contains(word, substr)
-		if cont {
-			startIndex := strings.Index(word, substr)
-			endIndex := startIndex + len(substr)
-	
-			// ANSI escape codes for coloring
-			red := "\033[31m"
-			reset := "\033[0m"
-	
-			// Print the string with the substring in red
-			for i := 0; i < 8; i++ {
-				for ind, char := range word {
-					if char == '\n' {
-						continue
-					}
-	
-					if !(char >= 32 && char <= 126) {
-						fmt.Println("Error: Input contains non-ASCII characters")
-						os.Exit(0)
-					}
-	
-					if ind >= startIndex && ind < endIndex {
-						fmt.Print(red + contents[int(char-' ')*9+1+i] + reset)
-					} else {
-						fmt.Print(contents[int(char-' ')*9+1+i])
-					}
+		reset := "\033[0m"
+		for i := 0; i < 8; i++ {
+			for ind := 0; ind < len(word); ind++ {
+				char := word[ind]
+				if char == '\n' {
+					continue
 				}
-				fmt.Println()
-			}
-		} else {
-			reset := "\033[0m"
-			for i := 0; i < 8; i++ {
-				for _, char := range word {
-					if char == '\n' {
-						continue
-					}
-					if !(char >= 32 && char <= 126) {
-						fmt.Println("Error: Input contains non-ASCII characters")
-						os.Exit(0)
-					}
-					fmt.Print(reset + contents[int(char-' ')*9+1+i])
+
+				if !(char >= 32 && char <= 126) {
+					fmt.Println("Error: Input contains non-ASCII characters")
+					os.Exit(0)
 				}
-				fmt.Println()
+
+				// Check if the current position is the start of the substring
+				if ind <= len(word)-len(substr) && word[ind:ind+len(substr)] == substr {
+					// Print the substring in color
+					for j := 0; j < len(substr); j++ {
+						char := word[ind+j]
+						fmt.Print(color + contents[int(char-' ')*9+1+i] + reset)
+					}
+					// Skip the length of the substring
+					ind += len(substr) - 1
+				} else {
+					// Print the normal character
+					fmt.Print(contents[int(char-' ')*9+1+i])
+				}
 			}
+			fmt.Println()
 		}
 	}
 }
@@ -203,4 +200,32 @@ func colorizeTexts(text, colour string) {
 	if color, exists := colorMap[colour]; exists {
 		fmt.Println(color + text + reset)
 	}
+}
+
+func getColor(colour string) string {
+	colorMap := map[string]string{
+		"black":   "\033[30m",
+		"red":     "\033[31m",
+		"green":   "\033[32m",
+		"yellow":  "\033[33m",
+		"blue":    "\033[34m",
+		"magenta": "\033[35m",
+		"cyan":    "\033[36m",
+		"white":   "\033[37m",
+		"bright_black":   "\033[90m",
+		"bright_red":     "\033[91m",
+		"bright_green":   "\033[92m",
+		"bright_yellow":  "\033[93m",
+		"bright_blue":    "\033[94m",
+		"bright_magenta": "\033[95m",
+		"bright_cyan":    "\033[96m",
+		"bright_white":   "\033[97m",
+	}
+	if color, exists := colorMap[colour]; exists {
+		return color
+	} else {
+		fmt.Println("Error: color choosed not available")
+		os.Exit(0)
+	}
+	return "\033[0m" // default to reset if color not found
 }
